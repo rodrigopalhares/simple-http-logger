@@ -63,7 +63,7 @@ class Server(BaseHTTPRequestHandler):
 def run(server_class=HTTPServer, handler_class=Server, port=8080):
     server_address = ("", port)
     httpd = server_class(server_address, handler_class)
-    print("Starting httpd {}..\n".format(port))
+    print_in_color(f"Starting httpd {port}...\n", color="green")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
