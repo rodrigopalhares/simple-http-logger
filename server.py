@@ -3,6 +3,10 @@
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+import json
+import os
+import datetime
+import random
 
 def print_in_color(text: str, color: str, end="\n"):
     HEADER = "\033[95m"
@@ -42,12 +46,27 @@ class Server(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.headers["Content-Length"]:
             content_length = int(self.headers["Content-Length"])
-            post_data = self.rfile.read(content_length)
+            post_data = self.rfile.read(content_length).decode('utf-8')
         else:
             post_data = b""
 
         print_in_color(f"{self.headers}", color="green", end="")
-        print_in_color(f"{post_data.decode('utf-8')}\n", color="cyan")
+
+        if "application/json" in self.headers["Content-Type"]:
+            try:
+                post_data = json.dumps(json.loads(post_data), indent=2)
+            except Exception:
+                pass
+
+        print_in_color(f"{post_data}\n", color="cyan")
+
+        current_date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        random_number = random.randint(1, 1000)
+        file_name = f"requests/post_data_{current_date}_{random_number}.json"
+
+        with open(file_name, "w") as file:
+            file.write(post_data)
+        
 
         self._set_response()
         self.wfile.write("POST request for {}".format(self.path).encode("utf-8"))
@@ -74,6 +93,9 @@ def run(server_class=HTTPServer, handler_class=Server, port=8080):
 
 if __name__ == "__main__":
     from sys import argv
+
+    if not os.path.exists("requests"):
+        os.makedirs("requests")
 
     if len(argv) == 2:
         run(port=int(argv[1]))
